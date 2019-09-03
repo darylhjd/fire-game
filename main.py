@@ -16,7 +16,7 @@ class Settings:
 
 
 class Background:
-    def __init__(self, screen, settings, picture):
+    def __init__(self, screen, settings, picture, xmove):
         self.settings = settings
 
         # Screen settings
@@ -33,22 +33,54 @@ class Background:
         self.rect.left = self.left
         self.rect.centery = self.centery
 
+        # Movement
+        self.xmove = -xmove
+
+    def scroll(self):
+        self.left += self.xmove
+        self.rect.left = self.left
+
+        if self.rect.right < 0:
+            self.left = 0
+            self.rect.left = self.left
+
+    def update(self, rep):
+        self.scroll()
+
+        self.screen.blit(self.image, self.rect)
+        if rep and self.rect.right < self.screen_rect.right:
+            self.screen.blit(self.image, (self.rect.right, 0))
+
 
 class FireTruck:
-    def __init__(self, screen, settings):
+    def __init__(self, screen, settings, xmove):
         self.screen = screen
         self.settings = settings
 
         # Image
-        self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/firetruck.png").convert_alpha(), 0, 1)
+        self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/firetruck.png").convert_alpha(), 0, 0.5)
         self.mask = pygame.mask.from_surface(self.image)
 
         # Position Firetruck
         self.rect = self.image.get_rect()
-        self.left = float(200)
-        self.centery = float(700)
-        self.rect.left = self.left
+        self.right = float(500)
+        self.centery = float(650)
+        self.rect.right = self.right
         self.rect.centery = self.centery
+
+        # Movement
+        self.xmove = xmove
+
+    def move(self):
+        self.right += self.xmove
+        self.rect.right = self.right
+
+    def blitme(self):
+        self.screen.blit(self.image, self.rect)
+
+    def update(self):
+        self.move()
+        self.blitme()
 
 
 class Fire:
@@ -83,30 +115,36 @@ class Message:
         self.rect.centerx = self.centerx
         self.rect.centery = self.centery
 
+    def show_message(self):
+        self.screen.blit(self.surf, self.rect)
 
-def check_events():
+
+def check_events(screen, space=False, q=False, pause=False):
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
 
-            if event.key == pygame.K_SPACE:
+            if space and event.key == pygame.K_SPACE:
                 return True
-            if event.key == pygame.K_q:
+            if q and event.key == pygame.K_q:
                 sys.exit()
+            if pause and event.key == pygame.K_p:
+                return pause_screen(screen)
 
 
 def start_screen(screen, settings):
     game_name = Message(screen, 100, "Fire Fire Pew", (250, 0, 0), 100)
-    start = Message(screen, 64, "Press 'SPACE' to Start", (255, 102, 102), -50)
-    bg = Background(screen, settings, r"Images/screen.png")
+    start = Message(screen, 64, "Press 'SPACE' to murder some fires :)", (255, 102, 102), -200)
+    bg = Background(screen, settings, r"Images/screen.png", 0.1)
 
     interval = 0
     while True:
-        if check_events():
+        if check_events(screen, space=True, q=True, pause=False):
+            del game_name, start
             break
-        screen.blit(bg.image, bg.rect)
-        screen.blit(game_name.surf, game_name.rect)
+        bg.update(True)
+        game_name.show_message()
         if 0 <= interval <= 350:
-            screen.blit(start.surf, start.rect)
+            start.show_message()
             interval += 1
         else:
             interval += 1
@@ -114,6 +152,38 @@ def start_screen(screen, settings):
                 interval = 0
 
         pygame.display.flip()
+
+
+def pause_screen(screen):
+    Message(screen, 100, "Game Paused", (0, 153, 0), 100).show_message()
+    Message(screen, 50, "Press 'C' to continue, 'Q' to quit.", (0, 153, 0), -200).show_message()
+    pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_c:
+                    return
+
+                if event.key == pygame.K_q:
+                    sys.exit()
+
+
+def main_game(screen, settings):
+    bg = Background(screen, settings, r"Images/BACKGROUND.png", 0.3)
+    firetruck = FireTruck(screen, settings, 0.050)
+
+    clock = pygame.time.Clock()
+
+    while True:
+        if check_events(screen, space=False, q=False, pause=True):
+            break
+        bg.update(False)
+        firetruck.update()
+        pygame.display.flip()
+
+        clock.tick(140)
 
 
 def run_game():
@@ -125,6 +195,9 @@ def run_game():
 
     # Start screen
     start_screen(screen, settings)
+
+    # Main game
+    main_game(screen, settings)
 
 
 run_game()
