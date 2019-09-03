@@ -53,8 +53,11 @@ class Background:
             self.rect.left = self.left
 
     def update(self, rep):
-        if self.rect.right > self.screen_rect.right:
-            self.scroll()
+        if not rep and self.rect.right <= self.screen_rect.right:
+            self.screen.blit(self.image, self.rect)
+            return
+
+        self.scroll()
 
         self.screen.blit(self.image, self.rect)
         if rep and self.rect.right < self.screen_rect.right:
@@ -230,7 +233,6 @@ def start_screen(screen, settings):
     interval = 0
     while True:
         if check_events(screen, space=True, q=True, pause=False):
-            del game_name, start
             break
         bg.update(True)
         game_name.show_message()
