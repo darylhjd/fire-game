@@ -1,0 +1,7 @@
+- Start Page
+- Pause Page
+- Game Over Page
+- Game Mechanisms (Goal, Obstacles)
+- Scoring
+
+Keep to one Python file
