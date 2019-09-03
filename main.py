@@ -2,10 +2,12 @@
 # main.py
 # Firefighter game
 
+import random
 import sys
 
 import pygame
 from pygame import DOUBLEBUF, HWSURFACE
+from pygame.sprite import Sprite, Group
 
 
 class Settings:
@@ -14,9 +16,15 @@ class Settings:
         self.screen_height = height
         self.screen_dimensions = (self.screen_width, self.screen_height)
 
+        # Screen settings
+        self.xmove = 1
+
+        # Fire settings
+        self.fire_spawnchance = 0.01
+
 
 class Background:
-    def __init__(self, screen, settings, picture, xmove):
+    def __init__(self, screen, settings, picture, xmove=None):
         self.settings = settings
 
         # Screen settings
@@ -34,7 +42,7 @@ class Background:
         self.rect.centery = self.centery
 
         # Movement
-        self.xmove = -xmove
+        self.xmove = -self.settings.xmove if not xmove else -xmove
 
     def scroll(self):
         self.left += self.xmove
@@ -45,7 +53,8 @@ class Background:
             self.rect.left = self.left
 
     def update(self, rep):
-        self.scroll()
+        if self.rect.right > self.screen_rect.right:
+            self.scroll()
 
         self.screen.blit(self.image, self.rect)
         if rep and self.rect.right < self.screen_rect.right:
@@ -69,7 +78,12 @@ class FireTruck:
         self.rect.centery = self.centery
 
         # Movement
+        self.increase_speed = False
         self.xmove = xmove
+
+    def check_increase(self, background):
+        if background.rect.right <= self.settings.screen_width:
+            self.xmove += self.settings.xmove/2
 
     def move(self):
         self.right += self.xmove
@@ -78,19 +92,60 @@ class FireTruck:
     def blitme(self):
         self.screen.blit(self.image, self.rect)
 
-    def update(self):
+    def update(self, background):
+        self.check_increase(background)
         self.move()
         self.blitme()
 
 
-class Fire:
-    def __init__(self, screen, settings):
-        self.screen = screen
+class Fire(Sprite):
+    def __init__(self, screen, settings, firetruck, background):
+        Sprite.__init__(self)
         self.settings = settings
 
+        # Background settings
+        self.background = background
+        self.bg_rect = self.background.rect
+
+        # Screen settings
+        self.screen = screen
+        self.screen_rect = self.screen.get_rect()
+
+        # Firetruck
+        self.firetruck = firetruck
+        self.firetruck_rect = self.firetruck.rect
+
         # Image
-        self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/fire.png").convert_alpha(), 0, 1)
+        self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/fire.png").convert_alpha(), 0, 0.4)
         self.mask = pygame.mask.from_surface(self.image)
+
+        # Position fire
+        self.rect = self.image.get_rect()
+        self.centerx = float(random.randint(self.firetruck_rect.right, self.bg_rect.right - 300))
+        self.centery = float(random.randint(180, 465))
+        self.rect.centery = self.centery
+
+        # Movement
+        self.xmove = self.background.xmove
+
+    def check_speed(self, background):
+        if background.rect.right <= self.settings.screen_width:
+            self.xmove = 0
+
+    def move_fire(self):
+        self.centerx += self.xmove
+        self.rect.centerx = self.centerx
+
+        if self.rect.right < 0:
+            self.kill()
+
+    def blitme(self):
+        self.screen.blit(self.image, self.rect)
+
+    def update(self, background):
+        self.check_speed(background)
+        self.move_fire()
+        self.blitme()
 
 
 class Message:
@@ -132,8 +187,15 @@ def check_events(screen, space=False, q=False, pause=False):
 
 
 def start_screen(screen, settings):
+    hmm = ['save some people',
+           'solve global warming',
+           'put out some fires',
+           'save the cat on that tree',
+           "drive a firetruck that isn't connected to a hydrant"]
+    var = random.choice(hmm)
+
     game_name = Message(screen, 100, "Fire Fire Pew", (250, 0, 0), 100)
-    start = Message(screen, 64, "Press 'SPACE' to murder some fires :)", (255, 102, 102), -200)
+    start = Message(screen, 64, f"Press 'SPACE' to {var}", (255, 102, 102), -200)
     bg = Background(screen, settings, r"Images/screen.png", 0.1)
 
     interval = 0
@@ -143,11 +205,13 @@ def start_screen(screen, settings):
             break
         bg.update(True)
         game_name.show_message()
+
         if 0 <= interval <= 350:
             start.show_message()
             interval += 1
         else:
             interval += 1
+
             if interval == 700:
                 interval = 0
 
@@ -170,9 +234,23 @@ def pause_screen(screen):
                     sys.exit()
 
 
+def create_fire(screen, settings, firetruck, background, fires):
+    # Chance of spawning fire
+    if random.random() <= settings.fire_spawnchance and background.rect.right > settings.screen_width:
+        fire = Fire(screen, settings, firetruck, background)
+        fires.add(fire)
+
+
+def update_fires(screen, settings, firetruck, background, fires):
+    create_fire(screen, settings, firetruck, background, fires)
+    fires.update(background)
+
+
 def main_game(screen, settings):
-    bg = Background(screen, settings, r"Images/BACKGROUND.png", 0.3)
+    bg = Background(screen, settings, r"Images/BACKGROUND.png")
     firetruck = FireTruck(screen, settings, 0.050)
+
+    fires = Group()
 
     clock = pygame.time.Clock()
 
@@ -180,9 +258,13 @@ def main_game(screen, settings):
         if check_events(screen, space=False, q=False, pause=True):
             break
         bg.update(False)
-        firetruck.update()
+        update_fires(screen, settings, firetruck, bg, fires)
+        firetruck.update(bg)
+        pygame.draw.line(screen, (230, 0, 0), (bg.rect.right - 300, 0), (bg.rect.right - 300, 800))
         pygame.display.flip()
 
+        if firetruck.rect.left >= settings.screen_width:
+            break
         clock.tick(140)
 
 
