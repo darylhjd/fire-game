@@ -101,6 +101,30 @@ class FireTruck:
 class Water(Sprite):
     def __init__(self, screen, settings, firetruck):
         Sprite.__init__(self)
+        self.settings = settings
+
+        # Screen settings
+        self.screen = screen
+        self.screen_rect = self.screen.get_rect()
+
+        # Firetruck
+        self.firetruck = firetruck
+        self.ft_rect = self.firetruck.get_rect()
+
+        # Image
+        self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/water.png").convert_alpha(),
+                                               random.randint(0, 360), 0.5)
+        self.mask = pygame.mask.from_surface(self.image)
+
+        # Positioning
+        self.rect = self.image.get_rect()
+        # Just instantiate generic attribute
+        self.centerx = 0
+        self.centery = 0
+
+    # TODO: Use mouse to get water position.
+    def something(self):
+        pass
 
 
 class Fire(Sprite):
