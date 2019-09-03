@@ -98,6 +98,11 @@ class FireTruck:
         self.blitme()
 
 
+class Water(Sprite):
+    def __init__(self, screen, settings, firetruck):
+        Sprite.__init__(self)
+
+
 class Fire(Sprite):
     def __init__(self, screen, settings, firetruck, background):
         Sprite.__init__(self)
@@ -234,6 +239,27 @@ def pause_screen(screen):
                     sys.exit()
 
 
+# Linter please, I don't want to refactor this.
+def end_screen(screen):
+    Message(screen, 100, "Game End", (0, 153, 0), 100).show_message()
+    Message(screen, 50, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
+            (0, 153, 0), -200).show_message()
+    pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_r:
+                    return False
+
+                if event.key == pygame.K_e:
+                    return True
+
+                if event.key == pygame.K_q:
+                    sys.exit()
+
+
 def create_fire(screen, settings, firetruck, background, fires):
     # Chance of spawning fire
     if random.random() <= settings.fire_spawnchance and background.rect.right > settings.screen_width:
@@ -260,7 +286,6 @@ def main_game(screen, settings):
         bg.update(False)
         update_fires(screen, settings, firetruck, bg, fires)
         firetruck.update(bg)
-        pygame.draw.line(screen, (230, 0, 0), (bg.rect.right - 300, 0), (bg.rect.right - 300, 800))
         pygame.display.flip()
 
         if firetruck.rect.left >= settings.screen_width:
@@ -268,18 +293,23 @@ def main_game(screen, settings):
         clock.tick(140)
 
 
-def run_game():
-    pygame.init()
-
+def initialise():
     settings = Settings()
     screen = pygame.display.set_mode(settings.screen_dimensions, DOUBLEBUF | HWSURFACE)
     pygame.display.set_caption("Pew Pew Fire")
 
-    # Start screen
-    start_screen(screen, settings)
-
-    # Main game
-    main_game(screen, settings)
+    return settings, screen
 
 
-run_game()
+cont = True
+r = True
+pygame.init()
+
+sett, scre = initialise()
+
+while cont:
+    if r:
+        start_screen(scre, sett)
+
+    main_game(scre, sett)
+    r = end_screen(scre)
