@@ -22,6 +22,9 @@ class Settings:
         # Fire settings
         self.fire_spawnchance = 0.01
 
+        # Water settings
+        self.max_water = 10
+
 
 class Background:
     def __init__(self, screen, settings, picture, xmove=None):
@@ -48,18 +51,24 @@ class Background:
         self.left += self.xmove
         self.rect.left = self.left
 
-        if self.rect.right < 0:
+        # If bg right is less than zero, bring it back to the start
+        if self.rect.right <= 0:
             self.left = 0
             self.rect.left = self.left
 
-    def update(self, rep):
-        if not rep and self.rect.right <= self.screen_rect.right:
-            self.screen.blit(self.image, self.rect)
-            return
+    def blitme(self):
+        self.screen.blit(self.image, self.rect)
 
+    def update(self, rep):  # If rep is false, then it is main background, else start screen background
         self.scroll()
 
-        self.screen.blit(self.image, self.rect)
+        # If main background and end of bg, it will stop scrolling
+        if not rep and self.rect.right < self.screen_rect.right:
+            self.rect.right = self.screen_rect.right
+
+        self.blitme()
+
+        # If start background and bg right is less than screen width, draw another screen to loop
         if rep and self.rect.right < self.screen_rect.right:
             self.screen.blit(self.image, (self.rect.right, 0))
 
@@ -71,7 +80,6 @@ class FireTruck:
 
         # Image
         self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/firetruck.png").convert_alpha(), 0, 0.5)
-        self.mask = pygame.mask.from_surface(self.image)
 
         # Position Firetruck
         self.rect = self.image.get_rect()
@@ -108,11 +116,10 @@ class Water(Sprite):
 
         # Screen settings
         self.screen = screen
-        self.screen_rect = self.screen.get_rect()
 
         # Firetruck
         self.firetruck = firetruck
-        self.ft_rect = self.firetruck.get_rect()
+        self.ft_rect = self.firetruck.rect
 
         # Image
         self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/water.png").convert_alpha(),
@@ -121,13 +128,18 @@ class Water(Sprite):
 
         # Positioning
         self.rect = self.image.get_rect()
-        # Just instantiate generic attribute
-        self.centerx = 0
-        self.centery = 0
+        self.centerx = float(self.rect.centerx)
 
-    # TODO: Use mouse to get water position.
-    def something(self):
-        pass
+    def blitme(self):
+        self.screen.blit(self.image, self.rect)
+
+    def update_position(self, background):
+        self.centerx += background.xmove
+        self.rect.centerx = self.centerx
+
+    def update(self, background):
+        self.update_position(background)
+        self.blitme()
 
 
 class Fire(Sprite):
@@ -168,9 +180,6 @@ class Fire(Sprite):
         self.centerx += self.xmove
         self.rect.centerx = self.centerx
 
-        if self.rect.right < 0:
-            self.kill()
-
     def blitme(self):
         self.screen.blit(self.image, self.rect)
 
@@ -186,14 +195,9 @@ class Message:
         self.screen = screen
         self.screen_rect = self.screen.get_rect()
 
-        # Font attributes
-        self.size = size
-        self.font = font
-        self.msg = message
-
         # Font
         self.fontobj = pygame.font.SysFont(font, size)
-        self.surf = self.fontobj.render(self.msg, True, color, None)
+        self.surf = self.fontobj.render(message, True, color, None)
 
         # Position
         self.rect = self.surf.get_rect()
@@ -237,12 +241,10 @@ def start_screen(screen, settings):
         bg.update(True)
         game_name.show_message()
 
+        interval += 1
         if 0 <= interval <= 350:
             start.show_message()
-            interval += 1
         else:
-            interval += 1
-
             if interval == 700:
                 interval = 0
 
@@ -266,7 +268,7 @@ def pause_screen(screen):
 
 
 # Linter please, I don't want to refactor this.
-def end_screen(screen):
+def end_screen(screen):  # NOSONAR haha eat this
     Message(screen, 100, "Game End", (0, 153, 0), 100).show_message()
     Message(screen, 50, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
             (0, 153, 0), -200).show_message()
@@ -298,24 +300,43 @@ def update_fires(screen, settings, firetruck, background, fires):
     fires.update(background)
 
 
+def update_waters(screen, settings, firetruck, background, waters):
+    """This doesn't work yet. Also did I mention I should but won't include docstrings cuz I'm lazy."""
+    for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0] and settings.max_water > 0:
+            water = Water(screen, settings, firetruck)
+            water.rect.center = pygame.mouse.get_pos()
+            waters.add(water)
+            settings.max_water -= 1
+            break
+    waters.update(background)
+
+
 def main_game(screen, settings):
     bg = Background(screen, settings, r"Images/BACKGROUND.png")
     firetruck = FireTruck(screen, settings, 0.050)
 
     fires = Group()
+    waters = Group()
 
     clock = pygame.time.Clock()
 
     while True:
         if check_events(screen, space=False, q=False, pause=True):
             break
+
         bg.update(False)
+
         update_fires(screen, settings, firetruck, bg, fires)
+        update_waters(screen, settings, firetruck, bg, waters)
+
         firetruck.update(bg)
+
         pygame.display.flip()
 
         if firetruck.rect.left >= settings.screen_width:
             break
+
         clock.tick(140)
 
 
