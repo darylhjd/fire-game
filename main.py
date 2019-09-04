@@ -229,12 +229,11 @@ def start_screen(screen, settings):
     hmm = ['save some people',
            'solve global warming',
            'put out some fires',
-           'save the cat on that tree',
-           "drive a firetruck that isn't connected to a hydrant"]
+           'save the cat on that tree']
     var = random.choice(hmm)
 
-    game_name = Message(screen, 70, "Fire Fire Pew", (250, 0, 0), 100)
-    start = Message(screen, 40, f"Press 'SPACE' to {var}", (255, 102, 102), -200)
+    game_name = Message(screen, 60, "Fire Fire Pew", (250, 0, 0), 100)
+    start = Message(screen, 30, f"Press 'SPACE' to {var}", (255, 102, 102), -200)
     bg = Background(screen, settings, r"Images/screen.png", 0.1)
 
     interval = 0
@@ -256,8 +255,8 @@ def start_screen(screen, settings):
 
 
 def pause_screen(screen):  # NOSONAR
-    Message(screen, 70, "Game Paused", (0, 153, 0), 100).show_message()
-    Message(screen, 40, "Press 'C' to continue, 'Q' to quit.", (0, 153, 0), -200).show_message()
+    Message(screen, 60, "Game Paused", (0, 153, 0), 100).show_message()
+    Message(screen, 30, "Press 'C' to continue, 'Q' to quit.", (0, 153, 0), -200).show_message()
     pygame.display.flip()
 
     while True:
@@ -292,9 +291,9 @@ def end_screen_eventloop():
 
 
 def end_screen(screen, score):
-    Message(screen, 70, "Game End", (0, 153, 0), 100).show_message()
-    Message(screen, 40, "Your score is: {:.2f}".format(score), (0, 153, 0), -150).show_message()
-    Message(screen, 30, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
+    Message(screen, 60, "Game End", (0, 153, 0), 100).show_message()
+    Message(screen, 30, "Your score is: {:.2f}".format(score), (0, 153, 0), -150).show_message()
+    Message(screen, 25, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
             (0, 153, 0), -200).show_message()
     pygame.display.flip()
 
@@ -341,7 +340,7 @@ def main_water_event(screen, settings, firetruck, background, waters):
 
 
 def show_water_left(screen, settings):
-    msg = Message(screen, 30, f"Waters left: {settings.max_water}", (230, 0, 0), 0)
+    msg = Message(screen, 25, f"Waters left: {settings.max_water}", (230, 0, 0), 0)
     msg.rect.topleft = (0, 0)
     msg.show_message()
 
