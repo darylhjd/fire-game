@@ -23,7 +23,7 @@ class Settings:
         self.fire_spawnchance = 0.01
 
         # Water settings
-        self.max_water = 10
+        self.max_water = 20
 
 
 class Background:
@@ -64,7 +64,7 @@ class Background:
 
         # If main background and end of bg, it will stop scrolling
         if not rep and self.rect.right < self.screen_rect.right:
-            self.rect.right = self.screen_rect.right
+            self.xmove = 0
 
         self.blitme()
 
@@ -110,7 +110,7 @@ class FireTruck:
 
 
 class Water(Sprite):
-    def __init__(self, screen, settings, firetruck):
+    def __init__(self, screen, settings, firetruck, coor):
         Sprite.__init__(self)
         self.settings = settings
 
@@ -123,11 +123,12 @@ class Water(Sprite):
 
         # Image
         self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/water.png").convert_alpha(),
-                                               random.randint(0, 360), 0.5)
+                                               random.randint(0, 360), 0.2)
         self.mask = pygame.mask.from_surface(self.image)
 
         # Positioning
         self.rect = self.image.get_rect()
+        self.rect.center = coor
         self.centerx = float(self.rect.centerx)
 
     def blitme(self):
@@ -210,16 +211,15 @@ class Message:
         self.screen.blit(self.surf, self.rect)
 
 
-def check_events(screen, space=False, q=False, pause=False):
+def start_screen_eventloop():
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
 
-            if space and event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE:
                 return True
-            if q and event.key == pygame.K_q:
+
+            if event.key == pygame.K_q:
                 sys.exit()
-            if pause and event.key == pygame.K_p:
-                return pause_screen(screen)
 
 
 def start_screen(screen, settings):
@@ -236,8 +236,9 @@ def start_screen(screen, settings):
 
     interval = 0
     while True:
-        if check_events(screen, space=True, q=True, pause=False):
+        if start_screen_eventloop():
             break
+
         bg.update(True)
         game_name.show_message()
 
@@ -267,48 +268,63 @@ def pause_screen(screen):
                     sys.exit()
 
 
-# Linter please, I don't want to refactor this.
-def end_screen(screen):  # NOSONAR haha eat this
+def end_screen_eventloop():
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+
+            if event.key == pygame.K_r:
+                return False
+
+            if event.key == pygame.K_e:
+                return True
+
+            if event.key == pygame.K_q:
+                sys.exit()
+
+
+def end_screen(screen, score):
     Message(screen, 100, "Game End", (0, 153, 0), 100).show_message()
+    Message(screen, 60, "Your score is: {:.2f}".format(score), (0, 153, 0), -100).show_message()
     Message(screen, 50, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
             (0, 153, 0), -200).show_message()
     pygame.display.flip()
 
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
+        moveon = end_screen_eventloop()
 
-                if event.key == pygame.K_r:
-                    return False
-
-                if event.key == pygame.K_e:
-                    return True
-
-                if event.key == pygame.K_q:
-                    sys.exit()
+        if moveon is not None:
+            return moveon
 
 
 def create_fire(screen, settings, firetruck, background, fires):
     # Chance of spawning fire
+    created = False
     if random.random() <= settings.fire_spawnchance and background.rect.right > settings.screen_width:
         fire = Fire(screen, settings, firetruck, background)
         fires.add(fire)
+        created = True
+
+    fires.update(background)
+    return created
 
 
 def update_fires(screen, settings, firetruck, background, fires):
-    create_fire(screen, settings, firetruck, background, fires)
-    fires.update(background)
+    return create_fire(screen, settings, firetruck, background, fires)
 
 
-def update_waters(screen, settings, firetruck, background, waters):
-    """This doesn't work yet. Also did I mention I should but won't include docstrings cuz I'm lazy."""
+def main_water_event(screen, settings, firetruck, background, waters):
     for event in pygame.event.get():
-        if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0] and settings.max_water > 0:
-            water = Water(screen, settings, firetruck)
-            water.rect.center = pygame.mouse.get_pos()
-            waters.add(water)
-            settings.max_water -= 1
-            break
+        if event.type == pygame.KEYDOWN:
+
+            if event.key == pygame.K_p:
+                pause_screen(screen)
+
+            if event.key == pygame.K_b and settings.max_water > 0:
+                coor = pygame.mouse.get_pos()
+                water = Water(screen, settings, firetruck, coor)
+                waters.add(water)
+                settings.max_water -= 1
+
     waters.update(background)
 
 
@@ -317,25 +333,31 @@ def main_game(screen, settings):
     firetruck = FireTruck(screen, settings, 0.050)
 
     fires = Group()
+    total_fires = 0
+
     waters = Group()
 
     clock = pygame.time.Clock()
 
     while True:
-        if check_events(screen, space=False, q=False, pause=True):
-            break
-
+        print(len(fires))
         bg.update(False)
 
-        update_fires(screen, settings, firetruck, bg, fires)
-        update_waters(screen, settings, firetruck, bg, waters)
+        main_water_event(screen, settings, firetruck, bg, waters)
+
+        if update_fires(screen, settings, firetruck, bg, fires):
+            total_fires += 1
+
+        # Check collisions
+        pygame.sprite.groupcollide(waters, fires, False, True)
 
         firetruck.update(bg)
 
         pygame.display.flip()
 
         if firetruck.rect.left >= settings.screen_width:
-            break
+            score = (total_fires - len(fires)) / total_fires
+            return score
 
         clock.tick(140)
 
@@ -358,5 +380,5 @@ while cont:
     if r:
         start_screen(scre, sett)
 
-    main_game(scre, sett)
-    r = end_screen(scre)
+    scr = main_game(scre, sett)
+    r = end_screen(scre, scr)
