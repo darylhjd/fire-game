@@ -197,7 +197,7 @@ class Message:
         self.screen_rect = self.screen.get_rect()
 
         # Font
-        self.fontobj = pygame.font.SysFont(font, size)
+        self.fontobj = pygame.font.SysFont(font, int(size*self.screen_rect.width/self.screen_rect.height))
         self.surf = self.fontobj.render(message, True, color, None)
 
         # Position
@@ -213,6 +213,9 @@ class Message:
 
 def start_screen_eventloop():
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
         if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_SPACE:
@@ -230,8 +233,8 @@ def start_screen(screen, settings):
            "drive a firetruck that isn't connected to a hydrant"]
     var = random.choice(hmm)
 
-    game_name = Message(screen, 100, "Fire Fire Pew", (250, 0, 0), 100)
-    start = Message(screen, 64, f"Press 'SPACE' to {var}", (255, 102, 102), -200)
+    game_name = Message(screen, 70, "Fire Fire Pew", (250, 0, 0), 100)
+    start = Message(screen, 40, f"Press 'SPACE' to {var}", (255, 102, 102), -200)
     bg = Background(screen, settings, r"Images/screen.png", 0.1)
 
     interval = 0
@@ -252,13 +255,16 @@ def start_screen(screen, settings):
         pygame.display.flip()
 
 
-def pause_screen(screen):
-    Message(screen, 100, "Game Paused", (0, 153, 0), 100).show_message()
-    Message(screen, 50, "Press 'C' to continue, 'Q' to quit.", (0, 153, 0), -200).show_message()
+def pause_screen(screen):  # NOSONAR
+    Message(screen, 70, "Game Paused", (0, 153, 0), 100).show_message()
+    Message(screen, 40, "Press 'C' to continue, 'Q' to quit.", (0, 153, 0), -200).show_message()
     pygame.display.flip()
 
     while True:
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+
             if event.type == pygame.KEYDOWN:
 
                 if event.key == pygame.K_c:
@@ -270,6 +276,9 @@ def pause_screen(screen):
 
 def end_screen_eventloop():
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
         if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_r:
@@ -283,9 +292,9 @@ def end_screen_eventloop():
 
 
 def end_screen(screen, score):
-    Message(screen, 100, "Game End", (0, 153, 0), 100).show_message()
-    Message(screen, 60, "Your score is: {:.2f}".format(score), (0, 153, 0), -100).show_message()
-    Message(screen, 50, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
+    Message(screen, 70, "Game End", (0, 153, 0), 100).show_message()
+    Message(screen, 40, "Your score is: {:.2f}".format(score), (0, 153, 0), -150).show_message()
+    Message(screen, 30, "Press 'R' to retry, 'E' to go to start screen, 'Q' to quit.",
             (0, 153, 0), -200).show_message()
     pygame.display.flip()
 
@@ -314,6 +323,9 @@ def update_fires(screen, settings, firetruck, background, fires):
 
 def main_water_event(screen, settings, firetruck, background, waters):
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
         if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_p:
