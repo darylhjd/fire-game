@@ -328,6 +328,12 @@ def main_water_event(screen, settings, firetruck, background, waters):
     waters.update(background)
 
 
+def show_water_left(screen, settings):
+    msg = Message(screen, 30, f"Waters left: {settings.max_water}", (230, 0, 0), 0)
+    msg.rect.topleft = (0, 0)
+    msg.show_message()
+
+
 def main_game(screen, settings):
     bg = Background(screen, settings, r"Images/BACKGROUND.png")
     firetruck = FireTruck(screen, settings, 0.050)
@@ -340,8 +346,8 @@ def main_game(screen, settings):
     clock = pygame.time.Clock()
 
     while True:
-        print(len(fires))
         bg.update(False)
+        show_water_left(screen, settings)
 
         main_water_event(screen, settings, firetruck, bg, waters)
 
