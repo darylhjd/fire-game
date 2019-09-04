@@ -355,7 +355,7 @@ def main_game(screen, settings):
             total_fires += 1
 
         # Check collisions
-        pygame.sprite.groupcollide(waters, fires, False, True)
+        pygame.sprite.groupcollide(waters, fires, False, True, collided=pygame.sprite.collide_mask)
 
         firetruck.update(bg)
 
