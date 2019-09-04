@@ -374,6 +374,9 @@ def main_game(screen, settings):
 
         if firetruck.rect.left >= settings.screen_width:
             score = (total_fires - len(fires)) / total_fires
+            fires.empty()
+            waters.empty()
+            settings.max_water = 20
             return score
 
         clock.tick(140)
