@@ -8,6 +8,7 @@ import sys
 import pygame
 from pygame.sprite import Group
 
+from Sprites.water import Water
 from message import Message
 from background import Background
 from Sprites.firetruck import FireTruck
@@ -76,7 +77,19 @@ def update_fire(screen, settings, fires, firetruck, background):
     fires.update(background)
 
 
-def main_game(screen, settings):
+def create_water(screen, settings, waters):
+    coor = pygame.mouse.get_pos()
+    water = Water(screen, settings, coor)
+    settings.max_water -= 1
+    waters.add(water)
+
+
+def check_create_water(screen, settings, waters, event):
+    if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0] and settings.max_water > 0:
+        create_water(screen, settings, waters)
+
+
+def main_game(screen, settings):  # NOSONAR
     picture_path = r"Images/BACKGROUND.png"
     background = Background(screen, picture_path, speed=settings.bg_speed, repeat=False)
     firetruck = FireTruck(screen, settings)
@@ -87,9 +100,6 @@ def main_game(screen, settings):
     clock = pygame.time.Clock()
 
     while True:
-        # Update background
-        background.update()
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
@@ -98,18 +108,28 @@ def main_game(screen, settings):
                 reset_game(settings, fires, waters)
                 return
 
+            # Create water when conditions are met
+            check_create_water(screen, settings, waters, event)
+
+        # Update background
+        background.update()
+
         # Show number of water left
         show_water_left(screen, settings)
 
         # Update fire
         update_fire(screen, settings, fires, firetruck, background)
 
-        # TODO: Update water and check collisions
+        # Update water
+        waters.update(background)
+
+        # Check water fire collisions
+        pygame.sprite.groupcollide(waters, fires, False, True, collided=pygame.sprite.collide_mask)
 
         # Update firetruck and break if it leaves screen, ie. game ends
         if firetruck.update():
-            reset_game(settings, fires, waters)
             score = (fires.total_spawns - len(fires)) / fires.total_spawns
+            reset_game(settings, fires, waters)
             return score
 
         pygame.display.flip()
@@ -124,7 +144,7 @@ def reset_game(settings, *args):
 
 def end_screen(screen, score):
     Message(screen, "Game Over!", (0, 153, 0), 100, size='big').show_message()
-    Message(screen, "Your score is {:.2f}".format(score), (0, 153, 0), -150, size="medium").show_message()
+    Message(screen, f"Your score is {round(score, 2)}", (0, 153, 0), -150, size="medium").show_message()
     Message(screen, "Press 'R' to retry, 'E' to go back to main menu, 'Q' to quit.", (0, 153, 0), -200).show_message()
     pygame.display.flip()
 

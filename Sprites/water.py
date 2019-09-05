@@ -9,16 +9,13 @@ from pygame.sprite import Sprite
 
 
 class Water(Sprite):
-    def __init__(self, screen, settings, firetruck, coor):
+    def __init__(self, screen, settings, coor):
         Sprite.__init__(self)
         self.settings = settings
 
         # Screen settings
         self.screen = screen
-
-        # Firetruck
-        self.firetruck = firetruck
-        self.ft_rect = self.firetruck.rect
+        self.screen_rect = self.screen.get_rect()
 
         # Image
         self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/water.png").convert_alpha(),
@@ -30,13 +27,15 @@ class Water(Sprite):
         self.rect.center = coor
         self.centerx = float(self.rect.centerx)
 
+        # Like Fire, Water's movement is decided in the class methods to ensure parity with the background.
+
+    def move(self, background):
+        self.centerx -= background.xmove
+        self.rect.centerx = self.centerx
+
     def blitme(self):
         self.screen.blit(self.image, self.rect)
 
-    def update_position(self, background):
-        self.centerx += background.xmove
-        self.rect.centerx = self.centerx
-
     def update(self, background):
-        self.update_position(background)
+        self.move(background)
         self.blitme()

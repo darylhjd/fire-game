@@ -34,7 +34,7 @@ class Fire(Sprite):
 
         # Image
         self.image = pygame.transform.rotozoom(pygame.image.load(r"Images/fire.png").convert_alpha(), 0, 0.4)
-        self.mask = pygame.mask.from_surface(self.image)
+        self.mask = pygame.mask.from_surface(self.image)  # Mask for pixel-perfect collision.
 
         # Position fire
         self.rect = self.image.get_rect()
