@@ -8,11 +8,11 @@ import sys
 import pygame
 from pygame.sprite import Group
 
-from Sprites.water import Water
-from message import Message
-from background import Background
-from Sprites.firetruck import FireTruck
 from Sprites.fire import Fire, FireGroup
+from Sprites.firetruck import FireTruck
+from Sprites.water import Water
+from background import Background
+from message import Message
 
 
 def show_start_prompt(interval, start_prompt):
