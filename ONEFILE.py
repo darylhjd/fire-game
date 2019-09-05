@@ -239,7 +239,7 @@ def start_screen(screen):
     background = Background(screen, picture_path, speed=0.35, repeat=True)
 
     game_name = Message(screen, "Fire Pew Pew", (250, 0, 0), 100, size='big')
-    start_prompt = Message(screen, f"Pess 'SPACE' to {chosen_prompt}", (250, 0, 0), -200)
+    start_prompt = Message(screen, f"Press 'SPACE' to {chosen_prompt}", (250, 0, 0), -200)
 
     clock = pygame.time.Clock()
 
@@ -380,7 +380,7 @@ def pause_screen(screen):
 
 
 def full_quit(event):
-    """This is used in end_screen() and start_screen()
+    """This is used in end_screen(), pause_screen() and start_screen()
     NOTE: This is not used in main_game() as conditions for quitting the game are different!"""
 
     if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
