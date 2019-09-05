@@ -37,7 +37,7 @@ def start_screen(screen):
     background = Background(screen, picture_path, speed=0.35, repeat=True)
 
     game_name = Message(screen, "Fire Pew Pew", (250, 0, 0), 100, size='big')
-    start_prompt = Message(screen, f"Pess 'SPACE' to {chosen_prompt}", (250, 0, 0), -200)
+    start_prompt = Message(screen, f"Press 'SPACE' to {chosen_prompt}", (250, 0, 0), -200)
 
     clock = pygame.time.Clock()
 
