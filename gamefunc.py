@@ -178,7 +178,7 @@ def pause_screen(screen):
 
 
 def full_quit(event):
-    """This is used in end_screen() and start_screen()
+    """This is used in end_screen(), pause_screen() and start_screen()
     NOTE: This is not used in main_game() as conditions for quitting the game are different!"""
 
     if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
