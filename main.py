@@ -5,7 +5,7 @@
 import pygame
 from pygame import DOUBLEBUF, HWSURFACE
 
-from gamefunctions import start_screen, main_game, end_screen
+from gamefunc import start_screen, main_game, end_screen
 from settings import Settings
 
 
@@ -19,10 +19,14 @@ def main():
     return_to_start = True  # Initialise True to make start_screen run on first run
     while True:
         if return_to_start:
-            start_screen(screen, settings)
+            start_screen(screen)
 
         score = main_game(screen, settings)
-        return_to_start = end_screen(screen, score)
+        if score is None:  # If player restarts while in the middle of the game
+            return_to_start = False
+            continue
+
+        return_to_start = end_screen(screen, score)  # If return_to_start is False, restart to main_game immediately
 
 
 main()

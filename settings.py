@@ -2,6 +2,8 @@
 # settings.py
 """Settings for main game"""
 
+bg_speed = 1
+
 
 class Settings:
     def __init__(self, width=1200, height=800):
@@ -9,8 +11,11 @@ class Settings:
         self.screen_height = height
         self.screen_dimensions = (self.screen_width, self.screen_height)
 
-        # Screen settings
-        self.xmove = 1
+        # Background settings
+        self.bg_speed = bg_speed
+
+        # Firetruck settings
+        self.truck_xmove = 0.165
 
         # Fire settings
         self.fire_spawnchance = 0.01
