@@ -6,7 +6,7 @@ import pygame
 
 
 class Background:
-    def __init__(self, screen, picture_path, speed=0, repeat=False):
+    def __init__(self, screen, picture_path, speed=float(0), repeat=False):
 
         # Screen settings
         self.screen = screen
