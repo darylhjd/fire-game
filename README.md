@@ -7,4 +7,4 @@ Left click to shoot.
 
 That is all.
 
-I in no way state this is quality code. No guarantees.
+Created for use as a PyGame tutorial.
